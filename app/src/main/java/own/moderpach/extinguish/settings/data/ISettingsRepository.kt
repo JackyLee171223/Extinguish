@@ -35,6 +35,13 @@ interface ISettingsRepository {
 
     val screenEvent: ScreenEvent
 
+    interface AppWhitelist {
+        var enabled: Boolean
+        var packages: Set<String>
+    }
+
+    val appWhitelist: AppWhitelist
+
     interface Compatibility {
         var brightnessManualWhenScreenOff: Boolean
     }

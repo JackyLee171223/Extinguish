@@ -121,4 +121,12 @@
     <string name="str_SystemUnsupportedBrightnessSettings_name">您的设备不支持亮度设置</string>
     <string name="str_SystemUnsupportedBrightnessSettings_description">如果您的设备实际支持亮度和自动亮度设置，尝试切换它们可能可以解决问题。</string>
     <string name="str_browser_not_found">浏览器未安装或启用</string>
+
+    <!-- 应用白名单 -->
+    <string name="App_whitelist">应用白名单</string>
+    <string name="str_appWhitelistEnabled">启用白名单限制</string>
+    <string name="str_appWhitelistHelp">开启并选定应用后，仅当选中的应用处于前台时，音量键才会熄屏/亮屏。长按快捷设置磁贴可打开本应用。</string>
+    <string name="str_appWhitelistSelected">已选择</string>
+    <string name="str_appWhitelistCardSelected">已允许 %1$d 个应用</string>
+    <string name="str_appWhitelistCardOff">无限制（所有应用）或未启用</string>
 </resources>

@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import own.moderpach.extinguish.home.cards.appWhitelist
 import own.moderpach.extinguish.home.cards.externalControl
 import own.moderpach.extinguish.home.cards.floatingButton
 import own.moderpach.extinguish.home.cards.moreSettings
@@ -61,6 +62,11 @@ fun HomeScreenQuickScrollDialog(
 
                         HomeScreenCardKeys.volumeKeyControl -> QuickScrollItem(
                             "音量键控制",
+                            onClick = onClick
+                        )
+
+                        HomeScreenCardKeys.appWhitelist -> QuickScrollItem(
+                            "应用白名单",
                             onClick = onClick
                         )
 

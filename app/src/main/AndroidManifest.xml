@@ -10,6 +10,9 @@
         </intent>
     </queries>
 
+    <!-- Required so the app-whitelist screen can list all installed apps on Android 13+. -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -79,6 +82,13 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Long-pressing the quick-settings tile opens the app home screen.
+                 TileService has no onLongClick callback; the system instead
+                 launches the activity that declares this action. -->
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
             </intent-filter>
         </activity>
     </application>

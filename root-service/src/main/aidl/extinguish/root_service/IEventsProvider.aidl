@@ -11,6 +11,7 @@ interface IEventsProvider {
     void stop() = 2;
     oneway void registerListener(IEventsListener listener) = 3;
     oneway void unregisterListener(IEventsListener listener) = 4;
+    String getForegroundPackage() = 5;
 
     void destroy() = 16777114;
 }

@@ -123,6 +123,30 @@ class EventsProviderService : RootService() {
             listenerList.unregister(listener)
         }
 
+        override fun getForegroundPackage(): String {
+            return try {
+                val process = Runtime.getRuntime().exec(
+                    arrayOf(
+                        "sh", "-c",
+                        "dumpsys activity activities | grep -m1 -E 'mResumedActivity|topResumedActivity'"
+                    )
+                )
+                val output = process.inputStream.bufferedReader().use { it.readText() }
+                process.destroy()
+                parseForegroundPackage(output)
+            } catch (e: Exception) {
+                debugLog("getForegroundPackage: $e")
+                ""
+            }
+        }
+
+        private fun parseForegroundPackage(output: String): String {
+            // Component form: com.example.app/.MainActivity or
+            // com.example.app/com.example.app.MainActivity
+            val regex = Regex("([a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z0-9_]+)+)/")
+            return regex.find(output)?.groupValues?.get(1) ?: ""
+        }
+
         override fun destroy() {
             debugLog("#destroy")
             release()

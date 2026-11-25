@@ -71,6 +71,11 @@ class SettingsRepository(
         override var enabled: Boolean by Delegate(SettingsTokens.ScreenEvent.Enabled)
     }
 
+    override val appWhitelist = object : ISettingsRepository.AppWhitelist {
+        override var enabled: Boolean by Delegate(SettingsTokens.AppWhitelist.Enabled)
+        override var packages: Set<String> by Delegate(SettingsTokens.AppWhitelist.Packages)
+    }
+
     override val compatibility = object : ISettingsRepository.Compatibility {
         override var brightnessManualWhenScreenOff: Boolean by Delegate(SettingsTokens.Compatibility.BrightnessManualWhenScreenOff)
     }

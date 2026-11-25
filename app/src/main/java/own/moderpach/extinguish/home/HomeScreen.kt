@@ -72,6 +72,7 @@ import own.moderpach.extinguish.R
 import own.moderpach.extinguish.SpecificPermission
 import own.moderpach.extinguish.isGranted
 import own.moderpach.extinguish.settings.data.SettingsTokens
+import own.moderpach.extinguish.home.cards.appWhitelist
 import own.moderpach.extinguish.home.cards.externalControl
 import own.moderpach.extinguish.home.cards.floatingButton
 import own.moderpach.extinguish.home.cards.moreSettings
@@ -176,6 +177,7 @@ fun HomeScreen(
         HomeScreenCardKeys.solution,
         HomeScreenCardKeys.floatingButton,
         HomeScreenCardKeys.volumeKeyControl,
+        HomeScreenCardKeys.appWhitelist,
         HomeScreenCardKeys.screenEventControl,
         HomeScreenCardKeys.notificationControl,
         HomeScreenCardKeys.tileControl,

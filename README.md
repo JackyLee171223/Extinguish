@@ -18,6 +18,8 @@ This project is forked from [Moderpach/Extinguish](https://github.com/Moderpach/
 | Quick-settings tiles | Two tiles, tapped in order | One tile for starting and toggling |
 | Privilege state recovery | Not applicable | Async cold-start detection; authorized users enter Home directly |
 | User interface | Shizuku authorization flow | Root or Shizuku authorization flow per selection |
+| App whitelist | Not available | Restrict volume-key screen control to selected foreground apps |
+| Tile long-press | Not available | Long-press opens the app home screen |
 
 ## Features
 
@@ -26,7 +28,7 @@ This project is forked from [Moderpach/Extinguish](https://github.com/Moderpach/
   - **Set screen power off**: switches display power off; touch input is unavailable while off.
   - **Set screen brightness to -1**: keeps touch input available for waking the screen.
 - Floating button with a timer popup.
-- Volume-key control.
+- Volume-key control, with an optional **per-app whitelist**: only selected apps in the foreground may toggle the screen with the volume keys. The picker sorts apps A–Z, has a right-side alphabet index, and pins already-selected apps to the top.
 - Touch-event control.
 - Notification controls.
 - One quick-settings tile.
@@ -47,7 +49,17 @@ Both methods share the same AIDL interface and hidden-API logic, so the feature 
 2. The first tap checks the selected privilege method. Once granted, the service starts and turns the screen off.
 3. While the service is running, use the volume keys to turn the screen on/off (volume + power / screenshot gestures are ignored).
 4. Tap the tile again to **stop the service** (the screen turns back on automatically).
-5. The tile acts as a service on/off switch; there is no longer a separate tile for starting the service.
+5. **Long-press** the tile to open the app home screen directly (handy for reaching settings).
+6. The tile acts as a service on/off switch; there is no longer a separate tile for starting the service.
+
+### App whitelist
+
+Open **Home → App whitelist** (under the volume-key control section), turn on the restriction, and select the apps that are allowed to control the screen with the volume keys:
+
+- Apps are sorted A–Z (Chinese labels sort by pinyin); a right-side alphabet index jumps to a letter.
+- Selected apps are pinned to the top of the list.
+- An empty selection means no restriction — behaviour is identical to earlier versions.
+- The foreground app is resolved by the privileged process (Root or Shizuku), so it works with both methods and in both volume-key listening modes.
 
 If the floating button is enabled, the "display over other apps" permission is also required.
 

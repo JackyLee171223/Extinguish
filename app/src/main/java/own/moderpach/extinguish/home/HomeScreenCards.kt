@@ -2,6 +2,8 @@ package own.moderpach.extinguish.home
 
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
 import own.moderpach.extinguish.ExtinguishNavRoute
+import own.moderpach.extinguish.home.cards.appWhitelist
+import own.moderpach.extinguish.home.cards.appWhitelistCard
 import own.moderpach.extinguish.home.cards.externalControl
 import own.moderpach.extinguish.home.cards.externalControlCard
 import own.moderpach.extinguish.home.cards.floatingButton
@@ -68,6 +70,12 @@ fun LazyStaggeredGridScope.homeScreenCards(
             )
 
             HomeScreenCardKeys.externalControl -> externalControlCard(
+                extinguishServiceState,
+                settingsRepository,
+                onNavigateTo
+            )
+
+            HomeScreenCardKeys.appWhitelist -> appWhitelistCard(
                 extinguishServiceState,
                 settingsRepository,
                 onNavigateTo

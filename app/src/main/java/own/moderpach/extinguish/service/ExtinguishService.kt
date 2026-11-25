@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import own.moderpach.extinguish.BuildConfig
 import own.moderpach.extinguish.ExceptionScenes
@@ -367,6 +368,11 @@ class ExtinguishService : LifecycleService() {
                 feature.enabledVolumeKeyEventControl.and(
                     feature.volumeKeyEventControlMethod == Shell
                 )
+            ).or(
+                // The foreground-app lookup for the whitelist also runs in the
+                // privileged process, so it needs this service bound even when
+                // volume keys are captured through the window path.
+                feature.appWhitelistEnabled
             )
 
             if (shouldBindEventsProviderService) {
@@ -380,6 +386,7 @@ class ExtinguishService : LifecycleService() {
             ) {
                 volumeKeyEventWindowHost = VolumeKeyEventWindowHost(this@ExtinguishService) {
                     lifecycleScope.launch(Dispatchers.Main) {
+                        if (!isForegroundAllowed()) return@launch
                         if (isScreenOn) {
                             updateHostState(false, feature)
                             turnScreenOff()
@@ -425,6 +432,7 @@ class ExtinguishService : LifecycleService() {
                                     this@ExtinguishService, service
                                 ) {
                                     lifecycleScope.launch(Dispatchers.Main) {
+                                        if (!isForegroundAllowed()) return@launch
                                         if (isScreenOn) {
                                             updateHostState(false, feature)
                                             turnScreenOff()
@@ -548,7 +556,9 @@ class ExtinguishService : LifecycleService() {
             SettingsTokens.VolumeKeyEvent.ListeningMethod.default
         ),
         SettingsTokens.ScreenEvent.Enabled.default,
-        SettingsTokens.Compatibility.BrightnessManualWhenScreenOff.default
+        SettingsTokens.Compatibility.BrightnessManualWhenScreenOff.default,
+        SettingsTokens.AppWhitelist.Enabled.default,
+        SettingsTokens.AppWhitelist.Packages.default
     )
 
     data class Feature(
@@ -561,7 +571,9 @@ class ExtinguishService : LifecycleService() {
         val clickVolumeKeyToTurnScreenOn: Boolean,
         val volumeKeyEventControlMethod: SettingsTokens.VolumeKeyEvent.ListeningMethodValue,
         val enabledScreenEventControl: Boolean,
-        val brightnessManualWhenScreenOff: Boolean
+        val brightnessManualWhenScreenOff: Boolean,
+        val appWhitelistEnabled: Boolean,
+        val appWhitelistPackages: Set<String>
     )
 
     fun loadFeatureFromSettings(repository: ISettingsRepository, removeFloatingButton: Boolean) {
@@ -575,8 +587,48 @@ class ExtinguishService : LifecycleService() {
             repository.volumeKeyEvent.clickToTurnScreenOn,
             repository.volumeKeyEvent.listeningMethod,
             repository.screenEvent.enabled && repository.solution == SettingsTokens.SolutionValue.ShizukuScreenBrightnessNeg1,
-            repository.compatibility.brightnessManualWhenScreenOff
+            repository.compatibility.brightnessManualWhenScreenOff,
+            repository.appWhitelist.enabled,
+            repository.appWhitelist.packages
         )
+    }
+
+    /**
+     * Returns true when the volume key may control the screen.
+     *
+     * Whitelist is opt-in: when disabled, or when no app has been selected,
+     * behaviour is unchanged. When enabled with a non-empty list, the foreground
+     * package must be one of the selected apps. If the privileged lookup fails,
+     * we fail open (allow) to avoid silently breaking the core screen control.
+     */
+    private suspend fun isForegroundAllowed(): Boolean {
+        // Read settings live so whitelist edits take effect without restarting
+        // the service. Fall back to the cached feature if the read fails.
+        var enabled = feature.appWhitelistEnabled
+        var packages = feature.appWhitelistPackages
+        withContext(Dispatchers.IO) {
+            try {
+                val repo = SyncSettingsRepository(settingsDataStore)
+                repo.update()
+                enabled = repo.appWhitelist.enabled
+                packages = repo.appWhitelist.packages
+            } catch (e: Exception) {
+                Log.d(TAG, "isForegroundAllowed: read settings failed $e")
+            }
+        }
+        if (!enabled || packages.isEmpty()) return true
+        val foreground = withContext(Dispatchers.IO) {
+            try {
+                eventsProviderService?.getForegroundPackage().orEmpty()
+            } catch (e: Exception) {
+                Log.d(TAG, "isForegroundAllowed: lookup failed $e")
+                ""
+            }
+        }
+        if (foreground.isEmpty()) return true
+        val allowed = foreground in packages
+        Log.d(TAG, "isForegroundAllowed: $foreground -> $allowed")
+        return allowed
     }
 
     //== Bind with privileged services (Root or Shizuku)

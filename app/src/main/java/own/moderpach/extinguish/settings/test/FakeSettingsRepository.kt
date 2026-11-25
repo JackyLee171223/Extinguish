@@ -35,6 +35,11 @@ class FakeSettingsRepository : ISettingsRepository {
         override var enabled: Boolean by mutableStateOf(false)
     }
 
+    override val appWhitelist = object : ISettingsRepository.AppWhitelist {
+        override var enabled: Boolean by mutableStateOf(false)
+        override var packages: Set<String> by mutableStateOf(emptySet())
+    }
+
     override val compatibility = object : ISettingsRepository.Compatibility {
         override var brightnessManualWhenScreenOff: Boolean by mutableStateOf(false)
     }

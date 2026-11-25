@@ -56,6 +56,17 @@ object SettingsTokens {
         val Enabled = booleanSettingElement("ScreenEvent/Enabled", false)
     }
 
+    /**
+     * Per-app whitelist for the volume-key screen control.
+     * When enabled and the package set is non-empty, the volume keys only
+     * toggle the screen while one of the listed apps is in the foreground.
+     * An empty list means no restriction (legacy behaviour).
+     */
+    object AppWhitelist {
+        val Enabled = booleanSettingElement("AppWhitelist/Enabled", false)
+        val Packages = stringSetSettingElement("AppWhitelist/Packages", emptySet())
+    }
+
     object Compatibility {
         val BrightnessManualWhenScreenOff =
             booleanSettingElement("Compatibility/BrightnessManualWhenScreenOff", true)

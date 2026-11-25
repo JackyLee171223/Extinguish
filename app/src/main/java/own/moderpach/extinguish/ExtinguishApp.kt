@@ -22,6 +22,7 @@ import own.moderpach.extinguish.guide.guideSolution
 import own.moderpach.extinguish.home.Home
 import own.moderpach.extinguish.home.home
 import own.moderpach.extinguish.settings.about
+import own.moderpach.extinguish.settings.appWhitelist
 import own.moderpach.extinguish.settings.compatible
 import own.moderpach.extinguish.settings.data.ISettingsRepository
 import own.moderpach.extinguish.settings.data.SettingsTokens
@@ -115,6 +116,10 @@ fun ExtinguishApp(
             onBack,
             settingsRepository,
             onNavigateTo
+        )
+        appWhitelist(
+            onBack,
+            settingsRepository,
         )
         externalControl(
             onBack,

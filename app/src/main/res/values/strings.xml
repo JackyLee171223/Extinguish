@@ -126,4 +126,12 @@
     <string name="str_SystemUnsupportedBrightnessSettings_description">If your device actually support setting brightness or brightness mode, you can try to switch these settings may solve the problem.</string>
     <string name="str_browser_not_found">Browser is not installed or enabled</string>
 
+    <!-- App whitelist -->
+    <string name="App_whitelist">App whitelist</string>
+    <string name="str_appWhitelistEnabled">Enable whitelist restriction</string>
+    <string name="str_appWhitelistHelp">When enabled with apps selected, the volume keys only turn the screen off/on while one of the selected apps is in the foreground. Long-press the quick settings tile to open this app.</string>
+    <string name="str_appWhitelistSelected">Selected</string>
+    <string name="str_appWhitelistCardSelected">%1$d app(s) allowed</string>
+    <string name="str_appWhitelistCardOff">No restriction (all apps) or not enabled</string>
+
 </resources>

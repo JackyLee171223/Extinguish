@@ -99,7 +99,6 @@ fun NavGraphBuilder.home(
     val context = LocalContext.current as Activity
     val windowSizeClass = calculateWindowSizeClass(context)
     val solutionsDependencyManager = LocalSolutionDependencyManager.current
-    val solutionState by solutionsDependencyManager.state.collectAsStateWithLifecycle()
     val systemPermissionsManager = LocalSystemPermissionsManager.current
     val permissionRequestLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -115,7 +114,7 @@ fun NavGraphBuilder.home(
     ) {
         when (ExtinguishService.state.value) {
             ExtinguishService.State.Destroyed -> {
-                solutionsDependencyManager.requestShizukuPermission { }
+                solutionsDependencyManager.requestRootPermission { }
                 systemPermissionsManager.requestSpecial(SpecificPermission.CanDrawOverlays)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     systemPermissionsManager.request(
@@ -126,7 +125,7 @@ fun NavGraphBuilder.home(
                     )
                 }
                 solutionsDependencyManager.updateImmediately()
-                if (!solutionState.isShizukuPermissionGranted) return@HomeScreen
+                if (!solutionsDependencyManager.state.value.isRootGranted) return@HomeScreen
                 if (
                     settingsRepository.floatingButton.enabled &&
                     !systemPermissionsManager.checkSpecial(SpecificPermission.CanDrawOverlays)

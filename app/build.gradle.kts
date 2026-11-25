@@ -8,7 +8,8 @@ plugins {
 
 android {
     namespace = "own.moderpach.extinguish"
-    compileSdk = 34
+    compileSdk = 37
+    compileSdkMinor = 0
 
     buildFeatures {
         buildConfig = true
@@ -17,9 +18,9 @@ android {
     defaultConfig {
         applicationId = "own.moderpach.extinguish"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 35
-        versionName = "0.9.5.1"
+        targetSdk = 37
+        versionCode = 36
+        versionName = "0.10.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         vectorDrawables {
@@ -132,9 +133,9 @@ dependencies {
     implementation(libs.navigation.compose)
     androidTestImplementation(libs.navigation.testing)
 
-    //shizuku
-    implementation(libs.shizuku.api)
-    implementation(libs.shizuku.provider)
+    //root (libsu) - replaces Shizuku
+    implementation(libs.libsu.core)
+    implementation(libs.libsu.service)
 
     //test
     testImplementation(libs.junit)
@@ -154,7 +155,7 @@ dependencies {
 
     //other module
     implementation(project(":hidden-api"))
-    implementation(project(":shizuku-service"))
+    implementation(project(":root-service"))
     implementation(project(":ipc"))
 
 }

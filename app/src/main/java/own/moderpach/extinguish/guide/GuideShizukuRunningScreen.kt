@@ -44,7 +44,6 @@ import own.moderpach.extinguish.settings.test.FakeSettingsRepository
 import own.moderpach.extinguish.test.FakeSolutionDependencyManager
 import own.moderpach.extinguish.test.FakeSystemPermissionsManager
 import own.moderpach.extinguish.ui.navigation.extinguishComposable
-import own.moderpach.extinguish.ui.navigation.openShizuku
 import own.moderpach.extinguish.ui.navigation.openUrlInBrowser
 import own.moderpach.extinguish.util.add
 
@@ -67,7 +66,8 @@ fun GuideShizukuRunningScreen(
     onNext: () -> Unit,
 ) {
     val context = LocalContext.current
-    val solutionState by LocalSolutionDependencyManager.current.state.collectAsStateWithLifecycle()
+    val solutionDependencyManager = LocalSolutionDependencyManager.current
+    val solutionState by solutionDependencyManager.state.collectAsStateWithLifecycle()
 
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.union(WindowInsets.displayCutout),
@@ -86,11 +86,11 @@ fun GuideShizukuRunningScreen(
                         .fillMaxWidth()
                 ) {
                     Text(
-                        stringResource(R.string.Shizuku_is_not_running),
+                        stringResource(R.string.Root_permission_required),
                         style = MaterialTheme.typography.titleLarge
                     )
                     Text(
-                        stringResource(R.string.str_Shizuku_is_not_running_supporting),
+                        stringResource(R.string.str_Root_permission_required_supporting),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -99,7 +99,7 @@ fun GuideShizukuRunningScreen(
         floatingActionButton = {
             Button(
                 onClick = onNext,
-                enabled = solutionState.isShizukuBinderAlive
+                enabled = solutionState.isRootGranted
             ) {
                 Text(stringResource(R.string.Complete))
             }
@@ -117,39 +117,20 @@ fun GuideShizukuRunningScreen(
                 )
             }
             item {
+                Button(onClick = { solutionDependencyManager.requestRootPermission {} }) {
+                    Text(stringResource(R.string.Grant_root_permission))
+                }
+            }
+            item {
                 Button(onClick = reselectSolution) {
                     Text(stringResource(R.string.Reselect_solution))
                 }
             }
             item {
                 Button(onClick = {
-                    context.openUrlInBrowser("https://shizuku.rikka.app/introduction/")
+                    context.openUrlInBrowser("https://github.com/topjohnwu/Magisk")
                 }) {
-                    Text(stringResource(R.string.Learn_more_about_Shizuku))
-                    Icon(painterResource(R.drawable.open_in_new_20px), null)
-                }
-            }
-            item {
-                Button(onClick = {
-                    context.openUrlInBrowser("https://shizuku.rikka.app/download/")
-                }) {
-                    Text(stringResource(R.string.Download_Shizuku))
-                    Icon(painterResource(R.drawable.open_in_new_20px), null)
-                }
-            }
-            item {
-                Button(onClick = {
-                    context.openUrlInBrowser("https://shizuku.rikka.app/guide/setup/")
-                }) {
-                    Text(stringResource(R.string.User_manual_of_Shizuku))
-                    Icon(painterResource(R.drawable.open_in_new_20px), null)
-                }
-            }
-            item {
-                Button(onClick = {
-                    context.openShizuku()
-                }) {
-                    Text(stringResource(R.string.Open_Shizuku))
+                    Text(stringResource(R.string.Learn_more_about_root))
                     Icon(painterResource(R.drawable.open_in_new_20px), null)
                 }
             }

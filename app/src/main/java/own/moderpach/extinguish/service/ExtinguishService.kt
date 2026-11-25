@@ -15,10 +15,11 @@ import android.provider.Settings
 import android.util.Log
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
-import extinguish.shizuku_service.DisplayControlService
-import extinguish.shizuku_service.EventsProviderService
-import extinguish.shizuku_service.IDisplayControl
-import extinguish.shizuku_service.IEventsProvider
+import com.topjohnwu.superuser.ipc.RootService
+import extinguish.root_service.DisplayControlService
+import extinguish.root_service.EventsProviderService
+import extinguish.root_service.IDisplayControl
+import extinguish.root_service.IEventsProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -52,7 +53,6 @@ import own.moderpach.extinguish.settings.data.SettingsTokens.VolumeKeyEvent.List
 import own.moderpach.extinguish.settings.data.SettingsTokens.VolumeKeyEvent.ListeningMethodValue.Window
 import own.moderpach.extinguish.settings.data.SyncSettingsRepository
 import own.moderpach.extinguish.settings.data.settingsDataStore
-import rikka.shizuku.Shizuku
 
 private const val TAG = "ExtinguishService"
 
@@ -306,7 +306,7 @@ class ExtinguishService : LifecycleService() {
             loadFeatureFromSettings(settingRepository, removeFloatingButton)
 
             solutionDependencyManager.updateImmediately()
-            if (!solutionDependencyManager.state.value.isShizukuPermissionGranted) {
+            if (!solutionDependencyManager.state.value.isRootGranted) {
                 state.update { State.Error }
                 return@launch
             }
@@ -469,7 +469,7 @@ class ExtinguishService : LifecycleService() {
                     } else {
                         notifyException(
                             ExceptionScenes.ExceptionWhenAccessShizukuRemote,
-                            "binding shizuku remote service timeout"
+                            "binding root remote service timeout"
                         )
                         state.update { State.Error }
                     }
@@ -567,28 +567,22 @@ class ExtinguishService : LifecycleService() {
         )
     }
 
-    //== Bind with shizuku
+    //== Bind with root services
 
-    fun checkShizukuPermission() =
-        Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+    fun checkRootGranted() = solutionDependencyManager.state.value.isRootGranted
 
     var displayControlService: IDisplayControl? = null
 
-    private val displayControlServiceArgs = Shizuku.UserServiceArgs(
+    private val displayControlServiceIntent = Intent().setComponent(
         ComponentName(
             BuildConfig.APPLICATION_ID,
             DisplayControlService::class.java.name
         )
     )
-        .processNameSuffix(DisplayControlService.TAG)
-        .tag(DisplayControlService.TAG)
-        .debuggable(BuildConfig.DEBUG)
-        .version(BuildConfig.VERSION_CODE)
-        .daemon(false)
 
     private val displayControlServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            if (service != null && Shizuku.pingBinder()) {
+            if (service != null) {
                 displayControlService = IDisplayControl.Stub.asInterface(service)
             } else {
                 notifyException(
@@ -606,8 +600,8 @@ class ExtinguishService : LifecycleService() {
 
     fun bindDisplayControlService() {
         try {
-            Shizuku.bindUserService(
-                displayControlServiceArgs,
+            RootService.bind(
+                displayControlServiceIntent,
                 displayControlServiceConnection
             )
         } catch (e: Exception) {
@@ -617,11 +611,7 @@ class ExtinguishService : LifecycleService() {
 
     fun unbindDisplayControlService() {
         try {
-            Shizuku.unbindUserService(
-                displayControlServiceArgs,
-                displayControlServiceConnection,
-                true
-            )
+            RootService.unbind(displayControlServiceConnection)
         } catch (e: Exception) {
             notifyException(ExceptionScenes.ExceptionWhenAccessShizukuRemote, e)
         }
@@ -629,21 +619,16 @@ class ExtinguishService : LifecycleService() {
 
     var eventsProviderService: IEventsProvider? = null
 
-    private val eventsProviderServiceArgs = Shizuku.UserServiceArgs(
+    private val eventsProviderServiceIntent = Intent().setComponent(
         ComponentName(
             BuildConfig.APPLICATION_ID,
             EventsProviderService::class.java.name
         )
     )
-        .processNameSuffix(EventsProviderService.TAG)
-        .tag(EventsProviderService.TAG)
-        .debuggable(BuildConfig.DEBUG)
-        .version(BuildConfig.VERSION_CODE)
-        .daemon(false)
 
     private val eventsProviderServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            if (service != null && Shizuku.pingBinder()) {
+            if (service != null) {
                 eventsProviderService = IEventsProvider.Stub.asInterface(service)
             } else {
                 notifyException(
@@ -661,8 +646,8 @@ class ExtinguishService : LifecycleService() {
 
     fun bindEventsProviderService() {
         try {
-            Shizuku.bindUserService(
-                eventsProviderServiceArgs,
+            RootService.bind(
+                eventsProviderServiceIntent,
                 eventsProviderServiceConnection
             )
         } catch (e: Exception) {
@@ -672,11 +657,7 @@ class ExtinguishService : LifecycleService() {
 
     fun unbindEventsProviderService() {
         try {
-            Shizuku.unbindUserService(
-                eventsProviderServiceArgs,
-                eventsProviderServiceConnection,
-                true
-            )
+            RootService.unbind(eventsProviderServiceConnection)
         } catch (e: Exception) {
             notifyException(ExceptionScenes.ExceptionWhenAccessShizukuRemote, e)
         }

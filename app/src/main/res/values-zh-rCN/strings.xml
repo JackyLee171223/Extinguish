@@ -12,8 +12,8 @@
     <string name="Screen_state">屏幕状态</string>
     <string name="Turn_screen_off">关闭屏幕</string>
     <string name="Current_solution">当前方案</string>
-    <string name="str_ShizukuPowerOffScreen">Shizuku | 关闭屏幕电源</string>
-    <string name="str_ShizukuScreenBrightnessNeg1">Shizuku | 调节屏幕亮度为-1</string>
+    <string name="str_ShizukuPowerOffScreen">Root | 关闭屏幕电源</string>
+    <string name="str_ShizukuScreenBrightnessNeg1">Root | 调节屏幕亮度为-1</string>
     <string name="Switch">切换</string>
     <string name="Start">启动</string>
     <string name="Stop">停止</string>
@@ -30,7 +30,7 @@
     <string name="Notification_control">通知控制</string>
     <string name="str_clickToTurnScreenOn">点按亮屏</string>
     <string name="str_clickToTurnScreenOff">点按息屏</string>
-    <string name="Quick_settings_tiles_control">快速设置磁铁控制</string>
+    <string name="Quick_settings_tiles_control">快速设置磁贴控制（单磁贴）</string>
     <string name="External_control">外部控制</string>
     <string name="About">关于</string>
     <string name="Compatibility_options">兼容性选项</string>
@@ -50,7 +50,7 @@
     <string name="Parameter">参数</string>
     <string name="str_ShizukuPowerOffScreen_supporting">在屏幕关闭期间，设备不能能响应屏幕触控事件。\n不支持触控屏幕亮屏。\n适用于各种屏幕，如LCD、OLED等。\n行为可能会受设备制造商定制系统的影响而发生变化。</string>
     <string name="str_ShizukuScreenBrightnessNeg1_supporting">在屏幕关闭期间，设备能响应屏幕触控事件。\n支持触控屏幕亮屏。\n适用于各种屏幕，如LCD、OLED等。\n行为可能会受设备制造商定制系统的影响而发生变化。例如，在一些设备上，该方案不能让屏幕完全不发光。</string>
-    <string name="str_Touch_screen_to_turn_it_on_supporting">只支持“Shizuku | 调节屏幕亮度为-1”</string>
+    <string name="str_Touch_screen_to_turn_it_on_supporting">只支持“Root | 调节屏幕亮度为-1”</string>
     <string name="Settings">设置</string>
     <string name="str_mergeTimerButton_supporting">长按关闭屏幕按钮显示定时器弹窗</string>
     <string name="str_brightnessManualWhenScreenOff_supporting">防止自动亮度与 Extinguish 服务互相干扰</string>
@@ -79,15 +79,13 @@
     <string name="Show_timer_popup">显示定时器弹窗</string>
     <string name="Previous">上一步</string>
     <string name="Next">下一步</string>
-    <string name="Download_Shizuku">下载 Shizuku</string>
-    <string name="User_manual_of_Shizuku">Shizuku 用户指南</string>
-    <string name="Open_Shizuku">打开 Shizuku</string>
-    <string name="Shizuku_is_not_running">Shizuku 未在运行</string>
-    <string name="str_Shizuku_is_not_running_supporting">您所选择的工作方案需要 Shizuku 运行</string>
+    <string name="Root_permission_required">需要 Root 权限</string>
+    <string name="str_Root_permission_required_supporting">您所选择的工作方案需要 Root（超级用户）权限</string>
     <string name="Complete">完成</string>
     <string name="str_You_can">您可以：</string>
     <string name="Reselect_solution">重新选择工作方案</string>
-    <string name="Learn_more_about_Shizuku">了解 Shizuku</string>
+    <string name="Grant_root_permission">获取 Root 权限</string>
+    <string name="Learn_more_about_root">了解 Root</string>
     <string name="User_agreement_and_Privacy_policy">用户协议与隐私政策</string>
     <string name="str_User_agreement_and_Privacy_policy_supporting">受您设备所在区域的法律要求，请您在使用前阅读并同意我们的条款</string>
     <string name="Agree">同意</string>
@@ -104,10 +102,9 @@
     <string name="Copy_logs">复制日志</string>
     <string name="str_ExceptionWhenInvokeSystemFunction_name">调用系统功能时异常</string>
     <string name="str_ExceptionWhenInvokeSystemFunction_description">您的设备可能不支持该方案，该异常也有可能是 Bug 造成的。</string>
-    <string name="str_ExceptionWhenAccessShizukuRemote_name">访问 Shizuku 远端时异常</string>
-    <string name="str_ExceptionWhenAccessShizukuRemote_description">Shizuku 工作不稳定。这也可能时 Bug 造成的。</string>
+    <string name="str_ExceptionWhenAccessShizukuRemote_name">访问 Root 远端时异常</string>
+    <string name="str_ExceptionWhenAccessShizukuRemote_description">Root 服务工作不稳定。这也可能是 Bug 造成的。</string>
     <string name="str_SystemUnsupportedBrightnessSettings_name">您的设备不支持亮度设置</string>
     <string name="str_SystemUnsupportedBrightnessSettings_description">如果您的设备实际支持亮度和自动亮度设置，尝试切换它们可能可以解决问题。</string>
     <string name="str_browser_not_found">浏览器未安装或启用</string>
-    <string name="str_shizuku_not_found">Shizuku 未安装或启用</string>
 </resources>

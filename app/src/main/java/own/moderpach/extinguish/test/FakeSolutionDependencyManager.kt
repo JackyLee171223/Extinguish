@@ -7,11 +7,13 @@ import own.moderpach.extinguish.SolutionDependencyState
 
 class FakeSolutionDependencyManager : ISolutionDependencyManager {
     override val state: StateFlow<SolutionDependencyState> =
-        MutableStateFlow(SolutionDependencyState())
+        MutableStateFlow(SolutionDependencyState(isChecking = false))
 
     override fun updateImmediately() {}
 
-    override fun requestShizukuPermission(onShouldShowRequestPermissionRationale: () -> Unit) {}
+    override fun requestRootPermission(onResult: (Boolean) -> Unit) {
+        onResult(state.value.isRootGranted)
+    }
 
     override fun destroy() {}
 }

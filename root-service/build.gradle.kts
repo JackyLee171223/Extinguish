@@ -6,8 +6,9 @@ plugins {
 }
 
 android {
-    namespace = "extinguish.shizuku_service"
-    compileSdk = 35
+    namespace = "extinguish.root_service"
+    compileSdk = 37
+    compileSdkMinor = 0
 
     buildFeatures {
         buildConfig = true
@@ -44,6 +45,7 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.appcompat)
     implementation(libs.material)
+    implementation(libs.libsu.service)
     implementation(project(":hidden-api"))
     implementation(project(":ipc"))
     testImplementation(libs.junit)

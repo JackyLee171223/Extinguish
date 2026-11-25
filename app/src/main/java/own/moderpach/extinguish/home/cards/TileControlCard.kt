@@ -87,30 +87,9 @@ private fun Example() {
                     .background(MaterialTheme.colorScheme.primary, CircleShape)
             ) {
                 Icon(
-                    painterResource(R.drawable.linked_services_24px),
-                    null,
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-            Placeholder(
-                width = 32.dp,
-                height = 12.dp,
-            )
-        }
-        Column(
-            Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                Modifier
-                    .background(MaterialTheme.colorScheme.surfaceContainer, CircleShape)
-            ) {
-                Icon(
                     painterResource(R.drawable.extinguish_24px),
                     null,
-                    tint = MaterialTheme.colorScheme.onSurface,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.padding(16.dp)
                 )
             }

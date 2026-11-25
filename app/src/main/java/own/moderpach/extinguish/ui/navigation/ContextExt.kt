@@ -17,19 +17,6 @@ fun Context.openUrlInBrowser(url: String) {
     }
 }
 
-fun Context.openShizuku() {
-    val intent = Intent().setClassName(
-        "moe.shizuku.privileged.api",
-        "moe.shizuku.manager.MainActivity"
-    ).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    if (hasTargetActivity(intent)) {
-        startActivity(intent)
-    } else {
-        val text = getString(R.string.str_shizuku_not_found)
-        Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
-    }
-}
-
 fun Context.hasTargetActivity(intent: Intent): Boolean {
     return packageManager.queryIntentActivities(intent, MATCH_DEFAULT_ONLY).size > 0
 }

@@ -13,7 +13,6 @@ import own.moderpach.extinguish.settings.data.settingsRepository
 import own.moderpach.extinguish.timer.data.ITimersRepository
 import own.moderpach.extinguish.timer.data.TimersDatabase
 import own.moderpach.extinguish.timer.data.timersRepository
-import rikka.sui.Sui
 
 private const val TAG = "MainActivity"
 
@@ -27,7 +26,6 @@ class MainActivity : ComponentActivity() {
     @ExperimentalMaterial3Api
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Sui.init(packageName)
         enableEdgeToEdge()
 
         solutionDependencyManager = SolutionDependencyManager(this).also {
@@ -54,6 +52,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume: ")
+        solutionDependencyManager.updateImmediately()
     }
 
     //分屏时点击不同窗口只会触发这个

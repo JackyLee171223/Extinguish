@@ -5,7 +5,8 @@ plugins {
 
 android {
     namespace = "extinguish.core"
-    compileSdk = 35
+    compileSdk = 37
+    compileSdkMinor = 0
 
     defaultConfig {
         minSdk = 26

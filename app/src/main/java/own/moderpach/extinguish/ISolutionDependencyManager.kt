@@ -7,7 +7,7 @@ interface ISolutionDependencyManager {
     val state: StateFlow<SolutionDependencyState>
 
     fun updateImmediately()
-    fun requestShizukuPermission(onShouldShowRequestPermissionRationale: () -> Unit)
+    fun requestRootPermission(onResult: (Boolean) -> Unit = {})
     fun destroy()
 }
 

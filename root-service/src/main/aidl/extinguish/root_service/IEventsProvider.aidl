@@ -1,7 +1,7 @@
 // IEventsProvider.aidl
-package extinguish.shizuku_service;
+package extinguish.root_service;
 
-import extinguish.shizuku_service.IEventsListener;
+import extinguish.root_service.IEventsListener;
 
 // Declare any non-default types here with import statements
 

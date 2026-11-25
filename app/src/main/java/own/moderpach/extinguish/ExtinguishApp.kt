@@ -59,8 +59,10 @@ fun ExtinguishApp(
     }
 
     LaunchedEffect(solutionState) {
+        // During a cold start libsu may not know the persisted Magisk grant yet.
+        // Wait for its asynchronous root-shell probe before choosing a page.
+        if (solutionState.isChecking) return@LaunchedEffect
         if (
-            startDestination == ExtinguishNavGraph.GuideShizukuRunning ||
             startDestination == ExtinguishNavGraph.GuideAgreement ||
             startDestination == ExtinguishNavGraph.GuideSolution
         ) return@LaunchedEffect
@@ -73,8 +75,10 @@ fun ExtinguishApp(
             else ExtinguishNavGraph.GuideSolution
             return@LaunchedEffect
         }
-        if (!solutionState.isShizukuBinderAlive) {
-            startDestination = ExtinguishNavGraph.GuideShizukuRunning
+        startDestination = if (solutionState.isRootGranted) {
+            ExtinguishNavGraph.Home
+        } else {
+            ExtinguishNavGraph.GuideShizukuRunning
         }
     }
 
@@ -130,7 +134,7 @@ fun ExtinguishApp(
         }
         guideSolution(settingsRepository) {
             settingsRepository.initVersion = BuildExt.INIT_VERSION
-            startDestination = if (solutionState.isShizukuBinderAlive) ExtinguishNavGraph.Home
+            startDestination = if (solutionState.isRootGranted) ExtinguishNavGraph.Home
             else ExtinguishNavGraph.GuideShizukuRunning
         }
         guideShizukuRunning(

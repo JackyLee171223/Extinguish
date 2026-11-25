@@ -13,6 +13,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         mavenLocal()
+        maven("https://jitpack.io")
     }
 }
 
@@ -21,5 +22,5 @@ rootProject.name = "Extinguish"
 include(":app")
 include(":kotlinBenchmark")
 include(":hidden-api")
-include(":shizuku-service")
+include(":root-service")
 include(":ipc")

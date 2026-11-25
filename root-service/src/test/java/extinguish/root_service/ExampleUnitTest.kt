@@ -1,4 +1,4 @@
-package extinguish.shizuku_service
+package extinguish.root_service
 
 import org.junit.Test
 

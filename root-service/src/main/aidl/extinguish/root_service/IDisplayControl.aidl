@@ -1,5 +1,5 @@
 // IDisplayControl.aidl
-package extinguish.shizuku_service;
+package extinguish.root_service;
 
 import extinguish.ipc.result.UnitResult;
 

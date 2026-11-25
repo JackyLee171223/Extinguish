@@ -6,7 +6,8 @@ plugins {
 
 android {
     namespace = "extinguish.ipc"
-    compileSdk = 35
+    compileSdk = 37
+    compileSdkMinor = 0
 
     buildFeatures {
         buildConfig = true

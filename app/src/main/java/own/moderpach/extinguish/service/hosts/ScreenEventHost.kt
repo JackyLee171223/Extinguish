@@ -3,8 +3,8 @@ package own.moderpach.extinguish.service.hosts
 import android.content.Context
 import android.util.Log
 import extinguish.ipc.result.EventResult
-import extinguish.shizuku_service.IEventsListener
-import extinguish.shizuku_service.IEventsProvider
+import extinguish.root_service.IEventsListener
+import extinguish.root_service.IEventsProvider
 
 private const val TAG = "ScreenEventHost"
 

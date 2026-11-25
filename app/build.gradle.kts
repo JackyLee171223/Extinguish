@@ -19,8 +19,8 @@ android {
         applicationId = "own.moderpach.extinguish"
         minSdk = 26
         targetSdk = 37
-        versionCode = 36
-        versionName = "0.10.0"
+        versionCode = 37
+        versionName = "0.10.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         vectorDrawables {

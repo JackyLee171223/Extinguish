@@ -452,7 +452,9 @@ class ExtinguishService : LifecycleService() {
                                 }
                             }
 
-                            service.launch("-F -e \": 0001 014a\" -e \": 0001 0072\" -e \": 0001 0073\"")
+                            // 0074 = KEY_POWER: captured so we can ignore volume
+                            // keys pressed together with power (screenshot gesture).
+                            service.launch("-F -e \": 0001 014a\" -e \": 0001 0072\" -e \": 0001 0073\" -e \": 0001 0074\"")
                         }
 
                         registerSystemLockReceiver()

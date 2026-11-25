@@ -45,8 +45,9 @@ Both methods share the same AIDL interface and hidden-API logic, so the feature 
 
 1. Add **Extinguish** to quick settings.
 2. The first tap checks the selected privilege method. Once granted, the service starts and turns the screen off.
-3. Later taps toggle the screen on and off.
-4. There is no longer a separate tile for starting the service.
+3. While the service is running, use the volume keys to turn the screen on/off (volume + power / screenshot gestures are ignored).
+4. Tap the tile again to **stop the service** (the screen turns back on automatically).
+5. The tile acts as a service on/off switch; there is no longer a separate tile for starting the service.
 
 If the floating button is enabled, the "display over other apps" permission is also required.
 

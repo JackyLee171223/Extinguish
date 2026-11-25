@@ -65,7 +65,8 @@ jobs:
 
             - Root 方案：基于 libsu 6.0.0 的 RootService（需 Magisk 等授予 Root）
             - Shizuku 方案：通过 Shizuku 授权，无需 Root
-            - 单磁贴：首次点击启动并关屏，之后点击在开屏/关屏间切换
+            - 单磁贴：首次点击启动并关屏，服务运行期间用音量键控制熄屏/亮屏，再次点击关闭服务
+            - 截图手势（电源键+音量键同时按下）不会误触熄屏/亮屏
             - 适配 Android 17（API 37），compileSdk / targetSdk 均为 37
 
             说明：本 APK 使用调试签名（debugSigned）。若已安装原签名版本，请先卸载。

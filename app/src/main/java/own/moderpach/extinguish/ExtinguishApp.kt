@@ -14,10 +14,10 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import own.moderpach.extinguish.guide.GuideAgreement
-import own.moderpach.extinguish.guide.GuideShizukuRunning
+import own.moderpach.extinguish.guide.GuidePrivilege
 import own.moderpach.extinguish.guide.GuideSolution
 import own.moderpach.extinguish.guide.guideAgreement
-import own.moderpach.extinguish.guide.guideShizukuRunning
+import own.moderpach.extinguish.guide.guidePrivilege
 import own.moderpach.extinguish.guide.guideSolution
 import own.moderpach.extinguish.home.Home
 import own.moderpach.extinguish.home.home
@@ -26,6 +26,7 @@ import own.moderpach.extinguish.settings.compatible
 import own.moderpach.extinguish.settings.data.ISettingsRepository
 import own.moderpach.extinguish.settings.data.SettingsTokens
 import own.moderpach.extinguish.settings.data.settingsDataStore
+import own.moderpach.extinguish.settings.data.SettingsTokens.PrivilegeModeValue
 import own.moderpach.extinguish.settings.externalControl
 import own.moderpach.extinguish.settings.floatingButton
 import own.moderpach.extinguish.settings.solution
@@ -58,7 +59,8 @@ fun ExtinguishApp(
         mutableStateOf(ExtinguishNavGraph.Home)
     }
 
-    LaunchedEffect(solutionState) {
+    val privilegeMode = settingsRepository.privilegeMode
+    LaunchedEffect(solutionState, privilegeMode) {
         // During a cold start libsu may not know the persisted Magisk grant yet.
         // Wait for its asynchronous root-shell probe before choosing a page.
         if (solutionState.isChecking) return@LaunchedEffect
@@ -75,10 +77,10 @@ fun ExtinguishApp(
             else ExtinguishNavGraph.GuideSolution
             return@LaunchedEffect
         }
-        startDestination = if (solutionState.isRootGranted) {
+        startDestination = if (solutionState.isGranted(privilegeMode)) {
             ExtinguishNavGraph.Home
         } else {
-            ExtinguishNavGraph.GuideShizukuRunning
+            ExtinguishNavGraph.GuidePrivilege
         }
     }
 
@@ -132,12 +134,21 @@ fun ExtinguishApp(
         guideAgreement(settingsRepository) {
             startDestination = ExtinguishNavGraph.GuideSolution
         }
-        guideSolution(settingsRepository) {
-            settingsRepository.initVersion = BuildExt.INIT_VERSION
-            startDestination = if (solutionState.isRootGranted) ExtinguishNavGraph.Home
-            else ExtinguishNavGraph.GuideShizukuRunning
-        }
-        guideShizukuRunning(
+        guideSolution(
+            settingsRepository,
+            onNext = {
+                settingsRepository.initVersion = BuildExt.INIT_VERSION
+                startDestination = if (solutionState.isGranted(settingsRepository.privilegeMode)) {
+                    ExtinguishNavGraph.Home
+                } else {
+                    ExtinguishNavGraph.GuidePrivilege
+                }
+            },
+            onSelectPrivilegeMode = { mode ->
+                settingsRepository.privilegeMode = mode
+            }
+        )
+        guidePrivilege(
             settingsRepository,
             reselectSolution = {
                 startDestination = ExtinguishNavGraph.GuideSolution

@@ -15,5 +15,7 @@ class FakeSolutionDependencyManager : ISolutionDependencyManager {
         onResult(state.value.isRootGranted)
     }
 
+    override fun requestShizukuPermission(onShouldShowRequestPermissionRationale: () -> Unit) {}
+
     override fun destroy() {}
 }

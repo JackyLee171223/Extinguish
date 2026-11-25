@@ -70,6 +70,8 @@ import own.moderpach.extinguish.LocalSystemPermissionsManager
 import own.moderpach.extinguish.Permission
 import own.moderpach.extinguish.R
 import own.moderpach.extinguish.SpecificPermission
+import own.moderpach.extinguish.isGranted
+import own.moderpach.extinguish.settings.data.SettingsTokens
 import own.moderpach.extinguish.home.cards.externalControl
 import own.moderpach.extinguish.home.cards.floatingButton
 import own.moderpach.extinguish.home.cards.moreSettings
@@ -114,7 +116,14 @@ fun NavGraphBuilder.home(
     ) {
         when (ExtinguishService.state.value) {
             ExtinguishService.State.Destroyed -> {
-                solutionsDependencyManager.requestRootPermission { }
+                val privilegeMode = settingsRepository.privilegeMode
+                when (privilegeMode) {
+                    SettingsTokens.PrivilegeModeValue.Root ->
+                        solutionsDependencyManager.requestRootPermission { }
+
+                    SettingsTokens.PrivilegeModeValue.Shizuku ->
+                        solutionsDependencyManager.requestShizukuPermission { }
+                }
                 systemPermissionsManager.requestSpecial(SpecificPermission.CanDrawOverlays)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     systemPermissionsManager.request(
@@ -125,7 +134,7 @@ fun NavGraphBuilder.home(
                     )
                 }
                 solutionsDependencyManager.updateImmediately()
-                if (!solutionsDependencyManager.state.value.isRootGranted) return@HomeScreen
+                if (!solutionsDependencyManager.state.value.isGranted(privilegeMode)) return@HomeScreen
                 if (
                     settingsRepository.floatingButton.enabled &&
                     !systemPermissionsManager.checkSpecial(SpecificPermission.CanDrawOverlays)

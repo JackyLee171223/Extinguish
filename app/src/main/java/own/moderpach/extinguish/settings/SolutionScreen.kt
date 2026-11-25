@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
@@ -14,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -77,6 +79,44 @@ fun SolutionScreen(
             verticalItemSpacing = 12.dp,
             contentPadding = innerPadding.add(horizontal = 12.dp).add(bottom = 16.dp),
         ) {
+            item {
+                Text(
+                    stringResource(R.string.Privilege_method),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                )
+            }
+            item {
+                RadioCard(
+                    modifier = Modifier.selectableGroup(),
+                    selected = settingsRepository.privilegeMode == SettingsTokens.PrivilegeModeValue.Root,
+                    headline = stringResource(R.string.Privilege_root),
+                    supporting = stringResource(R.string.str_Privilege_root_supporting),
+                    onClick = {
+                        settingsRepository.privilegeMode = SettingsTokens.PrivilegeModeValue.Root
+                    }
+                )
+            }
+            item {
+                RadioCard(
+                    modifier = Modifier.selectableGroup(),
+                    selected = settingsRepository.privilegeMode == SettingsTokens.PrivilegeModeValue.Shizuku,
+                    headline = stringResource(R.string.Privilege_shizuku),
+                    supporting = stringResource(R.string.str_Privilege_shizuku_supporting),
+                    onClick = {
+                        settingsRepository.privilegeMode = SettingsTokens.PrivilegeModeValue.Shizuku
+                    }
+                )
+            }
+            item {
+                Text(
+                    stringResource(R.string.Screen_off_solution),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                )
+            }
             item {
                 RadioCard(
                     modifier = Modifier.selectableGroup(),

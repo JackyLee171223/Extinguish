@@ -13,6 +13,7 @@ import own.moderpach.extinguish.settings.data.settingsRepository
 import own.moderpach.extinguish.timer.data.ITimersRepository
 import own.moderpach.extinguish.timer.data.TimersDatabase
 import own.moderpach.extinguish.timer.data.timersRepository
+import rikka.sui.Sui
 
 private const val TAG = "MainActivity"
 
@@ -27,6 +28,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        Sui.init(packageName)
 
         solutionDependencyManager = SolutionDependencyManager(this).also {
             it.updateImmediately()

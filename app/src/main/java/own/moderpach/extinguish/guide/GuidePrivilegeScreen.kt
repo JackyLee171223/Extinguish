@@ -39,28 +39,31 @@ import own.moderpach.extinguish.ExtinguishNavRoute
 import own.moderpach.extinguish.LocalSolutionDependencyManager
 import own.moderpach.extinguish.LocalSystemPermissionsManager
 import own.moderpach.extinguish.R
+import own.moderpach.extinguish.isGranted
 import own.moderpach.extinguish.settings.data.ISettingsRepository
+import own.moderpach.extinguish.settings.data.SettingsTokens
 import own.moderpach.extinguish.settings.test.FakeSettingsRepository
 import own.moderpach.extinguish.test.FakeSolutionDependencyManager
 import own.moderpach.extinguish.test.FakeSystemPermissionsManager
 import own.moderpach.extinguish.ui.navigation.extinguishComposable
+import own.moderpach.extinguish.ui.navigation.openShizuku
 import own.moderpach.extinguish.ui.navigation.openUrlInBrowser
 import own.moderpach.extinguish.util.add
 
-val ExtinguishNavGraph.GuideShizukuRunning: ExtinguishNavRoute get() = "GuideShizukuRunning"
+val ExtinguishNavGraph.GuidePrivilege: ExtinguishNavRoute get() = "GuidePrivilege"
 
-fun NavGraphBuilder.guideShizukuRunning(
+fun NavGraphBuilder.guidePrivilege(
     settingsRepository: ISettingsRepository,
     reselectSolution: () -> Unit,
     onNext: () -> Unit,
 ) = extinguishComposable(
-    ExtinguishNavGraph.GuideShizukuRunning,
+    ExtinguishNavGraph.GuidePrivilege,
 ) {
-    GuideShizukuRunningScreen(settingsRepository, reselectSolution, onNext)
+    GuidePrivilegeScreen(settingsRepository, reselectSolution, onNext)
 }
 
 @Composable
-fun GuideShizukuRunningScreen(
+fun GuidePrivilegeScreen(
     settingsRepository: ISettingsRepository,
     reselectSolution: () -> Unit,
     onNext: () -> Unit,
@@ -68,6 +71,8 @@ fun GuideShizukuRunningScreen(
     val context = LocalContext.current
     val solutionDependencyManager = LocalSolutionDependencyManager.current
     val solutionState by solutionDependencyManager.state.collectAsStateWithLifecycle()
+    val mode = settingsRepository.privilegeMode
+    val ready = solutionState.isGranted(mode)
 
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.union(WindowInsets.displayCutout),
@@ -85,21 +90,36 @@ fun GuideShizukuRunningScreen(
                         .padding(horizontal = 24.dp, vertical = 16.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(
-                        stringResource(R.string.Root_permission_required),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Text(
-                        stringResource(R.string.str_Root_permission_required_supporting),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    when (mode) {
+                        SettingsTokens.PrivilegeModeValue.Root -> {
+                            Text(
+                                stringResource(R.string.Root_permission_required),
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Text(
+                                stringResource(R.string.str_Root_permission_required_supporting),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+
+                        SettingsTokens.PrivilegeModeValue.Shizuku -> {
+                            Text(
+                                stringResource(R.string.Shizuku_is_not_running),
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Text(
+                                stringResource(R.string.str_Shizuku_is_not_running_supporting),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
                 }
             }
         },
         floatingActionButton = {
             Button(
                 onClick = onNext,
-                enabled = solutionState.isRootGranted
+                enabled = ready
             ) {
                 Text(stringResource(R.string.Complete))
             }
@@ -116,22 +136,66 @@ fun GuideShizukuRunningScreen(
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-            item {
-                Button(onClick = { solutionDependencyManager.requestRootPermission {} }) {
-                    Text(stringResource(R.string.Grant_root_permission))
+            when (mode) {
+                SettingsTokens.PrivilegeModeValue.Root -> {
+                    item {
+                        Button(onClick = { solutionDependencyManager.requestRootPermission {} }) {
+                            Text(stringResource(R.string.Grant_root_permission))
+                        }
+                    }
+                    item {
+                        Button(onClick = {
+                            context.openUrlInBrowser("https://github.com/topjohnwu/Magisk")
+                        }) {
+                            Text(stringResource(R.string.Learn_more_about_root))
+                            Icon(painterResource(R.drawable.open_in_new_20px), null)
+                        }
+                    }
+                }
+
+                SettingsTokens.PrivilegeModeValue.Shizuku -> {
+                    item {
+                        Button(onClick = {
+                            solutionDependencyManager.requestShizukuPermission {}
+                        }) {
+                            Text(stringResource(R.string.Grant_Shizuku_permission))
+                        }
+                    }
+                    item {
+                        Button(onClick = {
+                            context.openUrlInBrowser("https://shizuku.rikka.app/introduction/")
+                        }) {
+                            Text(stringResource(R.string.Learn_more_about_Shizuku))
+                            Icon(painterResource(R.drawable.open_in_new_20px), null)
+                        }
+                    }
+                    item {
+                        Button(onClick = {
+                            context.openUrlInBrowser("https://shizuku.rikka.app/download/")
+                        }) {
+                            Text(stringResource(R.string.Download_Shizuku))
+                            Icon(painterResource(R.drawable.open_in_new_20px), null)
+                        }
+                    }
+                    item {
+                        Button(onClick = {
+                            context.openUrlInBrowser("https://shizuku.rikka.app/guide/setup/")
+                        }) {
+                            Text(stringResource(R.string.User_manual_of_Shizuku))
+                            Icon(painterResource(R.drawable.open_in_new_20px), null)
+                        }
+                    }
+                    item {
+                        Button(onClick = { context.openShizuku() }) {
+                            Text(stringResource(R.string.Open_Shizuku))
+                            Icon(painterResource(R.drawable.open_in_new_20px), null)
+                        }
+                    }
                 }
             }
             item {
                 Button(onClick = reselectSolution) {
                     Text(stringResource(R.string.Reselect_solution))
-                }
-            }
-            item {
-                Button(onClick = {
-                    context.openUrlInBrowser("https://github.com/topjohnwu/Magisk")
-                }) {
-                    Text(stringResource(R.string.Learn_more_about_root))
-                    Icon(painterResource(R.drawable.open_in_new_20px), null)
                 }
             }
             item {
@@ -143,13 +207,13 @@ fun GuideShizukuRunningScreen(
 
 @Preview
 @Composable
-private fun GuideShizukuRunningScreenPreview() = MaterialTheme {
+private fun GuidePrivilegeScreenPreview() = MaterialTheme {
     CompositionLocalProvider(
         LocalSolutionDependencyManager provides FakeSolutionDependencyManager(),
         LocalSystemPermissionsManager provides FakeSystemPermissionsManager()
     ) {
         Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
-            GuideShizukuRunningScreen(
+            GuidePrivilegeScreen(
                 FakeSettingsRepository(),
                 reselectSolution = {},
                 onNext = {}

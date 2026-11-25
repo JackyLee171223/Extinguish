@@ -24,7 +24,6 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,19 +43,19 @@ val ExtinguishNavGraph.GuideSolution: ExtinguishNavRoute get() = "GuideSolution"
 fun NavGraphBuilder.guideSolution(
     settingsRepository: ISettingsRepository,
     onNext: () -> Unit,
+    onSelectPrivilegeMode: (SettingsTokens.PrivilegeModeValue) -> Unit,
 ) = extinguishComposable(
     ExtinguishNavGraph.GuideSolution,
 ) {
-    GuideSolutionScreen(settingsRepository, onNext)
+    GuideSolutionScreen(settingsRepository, onNext, onSelectPrivilegeMode)
 }
 
 @Composable
 fun GuideSolutionScreen(
     settingsRepository: ISettingsRepository,
     onNext: () -> Unit,
+    onSelectPrivilegeMode: (SettingsTokens.PrivilegeModeValue) -> Unit = {},
 ) {
-    val context = LocalContext.current
-
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.union(WindowInsets.displayCutout),
         topBar = {
@@ -101,6 +100,40 @@ fun GuideSolutionScreen(
             verticalItemSpacing = 12.dp,
             contentPadding = innerPadding.add(horizontal = 12.dp).add(bottom = 64.dp),
         ) {
+            item {
+                Text(
+                    stringResource(R.string.Privilege_method),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                )
+            }
+            item {
+                RadioCard(
+                    modifier = Modifier.selectableGroup(),
+                    selected = settingsRepository.privilegeMode == SettingsTokens.PrivilegeModeValue.Root,
+                    headline = stringResource(R.string.Privilege_root),
+                    supporting = stringResource(R.string.str_Privilege_root_supporting),
+                    onClick = { onSelectPrivilegeMode(SettingsTokens.PrivilegeModeValue.Root) }
+                )
+            }
+            item {
+                RadioCard(
+                    modifier = Modifier.selectableGroup(),
+                    selected = settingsRepository.privilegeMode == SettingsTokens.PrivilegeModeValue.Shizuku,
+                    headline = stringResource(R.string.Privilege_shizuku),
+                    supporting = stringResource(R.string.str_Privilege_shizuku_supporting),
+                    onClick = { onSelectPrivilegeMode(SettingsTokens.PrivilegeModeValue.Shizuku) }
+                )
+            }
+            item {
+                Text(
+                    stringResource(R.string.Screen_off_solution),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                )
+            }
             item {
                 RadioCard(
                     modifier = Modifier.selectableGroup(),

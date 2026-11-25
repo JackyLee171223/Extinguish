@@ -19,6 +19,7 @@ savedstate = "1.2.1"
 navigation = "2.8.0"
 room = "2.6.1"
 libsu = "6.0.0"
+shizuku = "13.1.5"
 truth = "1.6.0"
 kotlinBenchmark = "0.4.11"
 annotations = "24.1.0"
@@ -71,6 +72,8 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
 libsu-core = { group = "com.github.topjohnwu.libsu", name = "core", version.ref = "libsu" }
 libsu-service = { group = "com.github.topjohnwu.libsu", name = "service", version.ref = "libsu" }
+shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuku" }
+shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version.ref = "shizuku" }
 kotlinBenchmark-runtime = { group = "org.jetbrains.kotlinx", name = "kotlinx-benchmark-runtime", version.ref = "kotlinBenchmark" }
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
 

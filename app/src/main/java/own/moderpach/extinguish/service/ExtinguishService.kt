@@ -20,6 +20,8 @@ import extinguish.root_service.DisplayControlService
 import extinguish.root_service.EventsProviderService
 import extinguish.root_service.IDisplayControl
 import extinguish.root_service.IEventsProvider
+import extinguish.shizuku_service.DisplayControlService as ShizukuDisplayControlService
+import extinguish.shizuku_service.EventsProviderService as ShizukuEventsProviderService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -53,6 +55,8 @@ import own.moderpach.extinguish.settings.data.SettingsTokens.VolumeKeyEvent.List
 import own.moderpach.extinguish.settings.data.SettingsTokens.VolumeKeyEvent.ListeningMethodValue.Window
 import own.moderpach.extinguish.settings.data.SyncSettingsRepository
 import own.moderpach.extinguish.settings.data.settingsDataStore
+import own.moderpach.extinguish.isGranted
+import rikka.shizuku.Shizuku
 
 private const val TAG = "ExtinguishService"
 
@@ -306,7 +310,8 @@ class ExtinguishService : LifecycleService() {
             loadFeatureFromSettings(settingRepository, removeFloatingButton)
 
             solutionDependencyManager.updateImmediately()
-            if (!solutionDependencyManager.state.value.isRootGranted) {
+            // Accept either privileged backend according to the selected mode.
+            if (!solutionDependencyManager.state.value.isGranted(feature.privilegeMode)) {
                 state.update { State.Error }
                 return@launch
             }
@@ -529,6 +534,9 @@ class ExtinguishService : LifecycleService() {
         SettingsTokens.SolutionValue.valueOf(
             SettingsTokens.Solution.default
         ),
+        SettingsTokens.PrivilegeModeValue.valueOf(
+            SettingsTokens.PrivilegeMode.default
+        ),
         SettingsTokens.FloatingButton.Enabled.default,
         SettingsTokens.FloatingButton.HideWhenScreenOff.default,
         SettingsTokens.VolumeKeyEvent.Enabled.default,
@@ -543,6 +551,7 @@ class ExtinguishService : LifecycleService() {
 
     data class Feature(
         val solution: SettingsTokens.SolutionValue,
+        val privilegeMode: SettingsTokens.PrivilegeModeValue,
         val enabledFloatingButtonControl: Boolean,
         val hideFloatingButtonWhenScreenOff: Boolean,
         val enabledVolumeKeyEventControl: Boolean,
@@ -556,6 +565,7 @@ class ExtinguishService : LifecycleService() {
     fun loadFeatureFromSettings(repository: ISettingsRepository, removeFloatingButton: Boolean) {
         feature = Feature(
             repository.solution,
+            repository.privilegeMode,
             repository.floatingButton.enabled && !removeFloatingButton,
             repository.floatingButton.hideWhenScreenOff,
             repository.volumeKeyEvent.enabled,
@@ -567,18 +577,36 @@ class ExtinguishService : LifecycleService() {
         )
     }
 
-    //== Bind with root services
+    //== Bind with privileged services (Root or Shizuku)
+    //
+    // Both backends implement the same AIDL interfaces (:root-service), so the
+    // rest of the service only talks to IDisplayControl / IEventsProvider.
 
     fun checkRootGranted() = solutionDependencyManager.state.value.isRootGranted
 
+    private val usingShizuku: Boolean
+        get() = feature.privilegeMode == SettingsTokens.PrivilegeModeValue.Shizuku
+
     var displayControlService: IDisplayControl? = null
 
-    private val displayControlServiceIntent = Intent().setComponent(
+    private val rootDisplayControlIntent = Intent().setComponent(
         ComponentName(
             BuildConfig.APPLICATION_ID,
             DisplayControlService::class.java.name
         )
     )
+
+    private val shizukuDisplayControlArgs = Shizuku.UserServiceArgs(
+        ComponentName(
+            BuildConfig.APPLICATION_ID,
+            ShizukuDisplayControlService::class.java.name
+        )
+    )
+        .processNameSuffix(ShizukuDisplayControlService.TAG)
+        .tag(ShizukuDisplayControlService.TAG)
+        .debuggable(BuildConfig.DEBUG)
+        .version(BuildConfig.VERSION_CODE)
+        .daemon(false)
 
     private val displayControlServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -600,10 +628,11 @@ class ExtinguishService : LifecycleService() {
 
     fun bindDisplayControlService() {
         try {
-            RootService.bind(
-                displayControlServiceIntent,
-                displayControlServiceConnection
-            )
+            if (usingShizuku) {
+                Shizuku.bindUserService(shizukuDisplayControlArgs, displayControlServiceConnection)
+            } else {
+                RootService.bind(rootDisplayControlIntent, displayControlServiceConnection)
+            }
         } catch (e: Exception) {
             notifyException(ExceptionScenes.ExceptionWhenAccessShizukuRemote, e)
         }
@@ -611,7 +640,11 @@ class ExtinguishService : LifecycleService() {
 
     fun unbindDisplayControlService() {
         try {
-            RootService.unbind(displayControlServiceConnection)
+            if (usingShizuku) {
+                Shizuku.unbindUserService(shizukuDisplayControlArgs, displayControlServiceConnection, true)
+            } else {
+                RootService.unbind(displayControlServiceConnection)
+            }
         } catch (e: Exception) {
             notifyException(ExceptionScenes.ExceptionWhenAccessShizukuRemote, e)
         }
@@ -619,12 +652,24 @@ class ExtinguishService : LifecycleService() {
 
     var eventsProviderService: IEventsProvider? = null
 
-    private val eventsProviderServiceIntent = Intent().setComponent(
+    private val rootEventsProviderIntent = Intent().setComponent(
         ComponentName(
             BuildConfig.APPLICATION_ID,
             EventsProviderService::class.java.name
         )
     )
+
+    private val shizukuEventsProviderArgs = Shizuku.UserServiceArgs(
+        ComponentName(
+            BuildConfig.APPLICATION_ID,
+            ShizukuEventsProviderService::class.java.name
+        )
+    )
+        .processNameSuffix(ShizukuEventsProviderService.TAG)
+        .tag(ShizukuEventsProviderService.TAG)
+        .debuggable(BuildConfig.DEBUG)
+        .version(BuildConfig.VERSION_CODE)
+        .daemon(false)
 
     private val eventsProviderServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -633,7 +678,7 @@ class ExtinguishService : LifecycleService() {
             } else {
                 notifyException(
                     ExceptionScenes.ExceptionWhenAccessShizukuRemote,
-                    "get a null DisplayControlService connect or binder dead"
+                    "get a null EventsProviderService connect or binder dead"
                 )
             }
         }
@@ -646,10 +691,11 @@ class ExtinguishService : LifecycleService() {
 
     fun bindEventsProviderService() {
         try {
-            RootService.bind(
-                eventsProviderServiceIntent,
-                eventsProviderServiceConnection
-            )
+            if (usingShizuku) {
+                Shizuku.bindUserService(shizukuEventsProviderArgs, eventsProviderServiceConnection)
+            } else {
+                RootService.bind(rootEventsProviderIntent, eventsProviderServiceConnection)
+            }
         } catch (e: Exception) {
             notifyException(ExceptionScenes.ExceptionWhenAccessShizukuRemote, e)
         }
@@ -657,7 +703,11 @@ class ExtinguishService : LifecycleService() {
 
     fun unbindEventsProviderService() {
         try {
-            RootService.unbind(eventsProviderServiceConnection)
+            if (usingShizuku) {
+                Shizuku.unbindUserService(shizukuEventsProviderArgs, eventsProviderServiceConnection, true)
+            } else {
+                RootService.unbind(eventsProviderServiceConnection)
+            }
         } catch (e: Exception) {
             notifyException(ExceptionScenes.ExceptionWhenAccessShizukuRemote, e)
         }

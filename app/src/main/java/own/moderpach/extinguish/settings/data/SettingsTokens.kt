@@ -10,6 +10,17 @@ object SettingsTokens {
 
     val Solution = stringSettingElement("Solution", SolutionValue.ShizukuPowerOffScreen.name)
 
+    /**
+     * How the app obtains privileged access to control the screen.
+     * Both methods are fully supported and can be switched at any time.
+     */
+    enum class PrivilegeModeValue {
+        Root,
+        Shizuku
+    }
+
+    val PrivilegeMode = stringSettingElement("PrivilegeMode", PrivilegeModeValue.Root.name)
+
     val AgreedPolicyVersion = intSettingElement("AgreedPolicyVersion", 0)
     val KeepWakeWhileScreenOff = booleanSettingElement("KeepWakeWhileScreenOff", true)
 

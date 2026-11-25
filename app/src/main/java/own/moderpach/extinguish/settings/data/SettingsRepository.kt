@@ -36,6 +36,12 @@ class SettingsRepository(
         set(value) {
             _solution = value.name
         }
+    private var _privilegeMode by Delegate(SettingsTokens.PrivilegeMode)
+    override var privilegeMode
+        get() = SettingsTokens.PrivilegeModeValue.valueOf(_privilegeMode)
+        set(value) {
+            _privilegeMode = value.name
+        }
     override var keepWakeWhileScreenOff by Delegate(SettingsTokens.KeepWakeWhileScreenOff)
 
     override val floatingButton = object : ISettingsRepository.FloatingButton {

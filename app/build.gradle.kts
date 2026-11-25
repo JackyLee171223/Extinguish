@@ -133,9 +133,13 @@ dependencies {
     implementation(libs.navigation.compose)
     androidTestImplementation(libs.navigation.testing)
 
-    //root (libsu) - replaces Shizuku
+    //root (libsu)
     implementation(libs.libsu.core)
     implementation(libs.libsu.service)
+
+    //shizuku (coexists with root)
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
 
     //test
     testImplementation(libs.junit)
@@ -156,6 +160,7 @@ dependencies {
     //other module
     implementation(project(":hidden-api"))
     implementation(project(":root-service"))
+    implementation(project(":shizuku-service"))
     implementation(project(":ipc"))
 
 }

@@ -8,7 +8,7 @@ Extinguish relies on the following system permissions:
 
 1. Send notifications: Used to show notification controller and error messages.
 2. Display on other apps (floating window): Used to display floating buttons and capture volume key events.
-3. Root (superuser) access: Used to turn off the screen and capture volume key and screen tap events.
+3. Privileged access (Root or Shizuku, depending on your choice): Used to turn off the screen and capture volume key and screen tap events. You may choose either method; both are supported.
 4. Foreground service: Used to ensure the stability of Extinguish services.
 
-Root access and display over other apps (floating window) are highly privileged capabilities. Extinguish uses them only for the features described above, but a compromised root environment may expose personal information beyond this app's control.
+Privileged access (Root or Shizuku) and display over other apps (floating window) are highly privileged capabilities. Extinguish uses them only for the features described above, but a compromised privileged environment may expose personal information beyond this app's control.

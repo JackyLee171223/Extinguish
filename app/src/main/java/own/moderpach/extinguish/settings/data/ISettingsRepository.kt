@@ -4,6 +4,7 @@ interface ISettingsRepository {
 
     var initVersion: Int
     var solution: SettingsTokens.SolutionValue
+    var privilegeMode: SettingsTokens.PrivilegeModeValue
     var keepWakeWhileScreenOff: Boolean
 
     interface FloatingButton {

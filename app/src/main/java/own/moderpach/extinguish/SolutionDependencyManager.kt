@@ -1,16 +1,21 @@
 package own.moderpach.extinguish
 
 import android.content.Context
+import android.content.pm.PackageManager
 import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
+import rikka.shizuku.Shizuku
 
 /**
- * Root-based replacement for the previous Shizuku dependency manager.
+ * Tracks both privilege backends at the same time so the user can freely
+ * switch between Root (libsu) and Shizuku without reinstalling.
  *
- * Uses libsu to query and request root access. Root services are hosted in a
- * privileged process spawned by libsu (see extinguish.root_service).
+ * - Root services run in a privileged process spawned by libsu.
+ * - Shizuku services run as a Shizuku user service.
+ * Both implementations share one AIDL interface (:root-service).
  */
 class SolutionDependencyManager(
     private val context: Context
@@ -19,11 +24,66 @@ class SolutionDependencyManager(
     private val _state = MutableStateFlow(SolutionDependencyState())
     override val state: StateFlow<SolutionDependencyState> = _state
 
+    //== Root (libsu)
+
     private val rootRequestLock = Any()
     private var rootRequestInFlight = false
     private val rootRequestCallbacks = mutableListOf<(Boolean) -> Unit>()
 
+    //== Shizuku
+
+    private interface ShizukuDependencyListener {
+        val binderReceivedListener: Shizuku.OnBinderReceivedListener
+        val binderDeadListener: Shizuku.OnBinderDeadListener
+        val requestPermissionResultListener: Shizuku.OnRequestPermissionResultListener
+    }
+
+    private val shizuku = object : ShizukuDependencyListener {
+        override val binderReceivedListener = Shizuku.OnBinderReceivedListener {
+            _state.getAndUpdate {
+                it.copy(isShizukuBinderAlive = true)
+            }
+        }
+        override val binderDeadListener = Shizuku.OnBinderDeadListener {
+            _state.getAndUpdate {
+                it.copy(isShizukuBinderAlive = false, isShizukuPermissionGranted = false)
+            }
+        }
+        override val requestPermissionResultListener =
+            Shizuku.OnRequestPermissionResultListener { _, grantResult ->
+                _state.getAndUpdate {
+                    it.copy(isShizukuPermissionGranted = grantResult == PackageManager.PERMISSION_GRANTED)
+                }
+            }
+    }
+
+    init {
+        runCatching {
+            Shizuku.addBinderReceivedListener(shizuku.binderReceivedListener)
+            Shizuku.addBinderDeadListener(shizuku.binderDeadListener)
+            Shizuku.addRequestPermissionResultListener(shizuku.requestPermissionResultListener)
+        }
+    }
+
     override fun updateImmediately() {
+        updateShizukuState()
+        updateRootState()
+    }
+
+    private fun updateShizukuState() {
+        val binderAlive = runCatching { Shizuku.pingBinder() }.getOrElse { false }
+        val permissionGranted = runCatching {
+            binderAlive && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+        }.getOrElse { false }
+        _state.update {
+            it.copy(
+                isShizukuBinderAlive = binderAlive,
+                isShizukuPermissionGranted = permissionGranted
+            )
+        }
+    }
+
+    private fun updateRootState() {
         // isAppGrantedRoot() returns null after a cold start until at least one
         // root shell has been created. In that case, actively create/acquire a
         // shell instead of incorrectly treating the unknown state as denied.
@@ -74,7 +134,7 @@ class SolutionDependencyManager(
 
     private fun publishRootState(granted: Boolean, available: Boolean) {
         _state.update {
-            SolutionDependencyState(
+            it.copy(
                 isRootAvailable = available,
                 isRootGranted = granted,
                 isChecking = false
@@ -82,11 +142,32 @@ class SolutionDependencyManager(
         }
     }
 
-    override fun destroy() {}
+    override fun requestShizukuPermission(onShouldShowRequestPermissionRationale: () -> Unit) {
+        val binderAlive = runCatching { Shizuku.pingBinder() }.getOrElse { false }
+        val permissionGranted = runCatching {
+            binderAlive && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+        }.getOrElse { false }
+        if (permissionGranted) return
+        if (runCatching { Shizuku.shouldShowRequestPermissionRationale() }.getOrElse { false }) {
+            onShouldShowRequestPermissionRationale()
+            return
+        }
+        runCatching { Shizuku.requestPermission(1) }
+    }
+
+    override fun destroy() {
+        runCatching {
+            Shizuku.removeBinderReceivedListener(shizuku.binderReceivedListener)
+            Shizuku.removeBinderDeadListener(shizuku.binderDeadListener)
+            Shizuku.removeRequestPermissionResultListener(shizuku.requestPermissionResultListener)
+        }
+    }
 }
 
 data class SolutionDependencyState(
     val isRootAvailable: Boolean = false,
     val isRootGranted: Boolean = false,
+    val isShizukuBinderAlive: Boolean = false,
+    val isShizukuPermissionGranted: Boolean = false,
     val isChecking: Boolean = true
 )

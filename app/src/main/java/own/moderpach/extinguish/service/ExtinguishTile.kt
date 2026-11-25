@@ -18,6 +18,7 @@ import own.moderpach.extinguish.R
 import own.moderpach.extinguish.SolutionDependencyManager
 import own.moderpach.extinguish.SpecificPermission
 import own.moderpach.extinguish.SystemPermissionsManager
+import own.moderpach.extinguish.isGranted
 import own.moderpach.extinguish.settings.data.SyncSettingsRepository
 import own.moderpach.extinguish.settings.data.settingsDataStore
 
@@ -77,11 +78,18 @@ class ExtinguishTile : TileService() {
         clickJob = serviceScope.launch {
             settingsRepository.update()
             solutionDependencyManager.updateImmediately()
-            if (solutionDependencyManager.state.value.isRootGranted) {
+            val mode = settingsRepository.privilegeMode
+            if (solutionDependencyManager.state.value.isGranted(mode)) {
                 startOrSwitchService()
             } else {
-                solutionDependencyManager.requestRootPermission { granted ->
-                    if (granted) serviceScope.launch { startOrSwitchService() }
+                when (mode) {
+                    own.moderpach.extinguish.settings.data.SettingsTokens.PrivilegeModeValue.Root ->
+                        solutionDependencyManager.requestRootPermission { granted ->
+                            if (granted) serviceScope.launch { startOrSwitchService() }
+                        }
+
+                    own.moderpach.extinguish.settings.data.SettingsTokens.PrivilegeModeValue.Shizuku ->
+                        solutionDependencyManager.requestShizukuPermission { }
                 }
             }
         }

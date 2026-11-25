@@ -24,15 +24,18 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      # Android 17 = API 37.0，仓库目录带 minor 版本号，需显式安装
+      # ubuntu-latest 已预装 Android SDK。setup-android action 在新版 cmdline-tools
+      # 上因 'tools' 包被移除而失败，故这里手动定位 sdkmanager 并安装所需组件。
       - name: Install Android 17 SDK platform and build-tools
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager --install "platform-tools" "platforms;android-37.0" "build-tools;35.0.0"
+          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          SDKMGR=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)
+          if [ -z "$SDKMGR" ]; then echo "sdkmanager not found" >&2; exit 1; fi
+          echo "Using sdkmanager: $SDKMGR"
+          yes | "$SDKMGR" --sdk_root="$ANDROID_HOME" --licenses > /dev/null || true
+          "$SDKMGR" --sdk_root="$ANDROID_HOME" --install "platform-tools" "platforms;android-37.0" "build-tools;35.0.0"
           echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
 
       - name: Build debug-signed APK
         run: |
@@ -69,4 +72,5 @@ jobs:
             在设置页（工作方案）中可随时切换 Root / Shizuku 特权方式。
           files: Extinguish-Root-Shizuku-Android17.apk
           generate_release_notes: true
+          overwrite_files: true
           fail_on_unmatched_files: true

@@ -18,7 +18,7 @@ This project is forked from [Moderpach/Extinguish](https://github.com/Moderpach/
 | Quick-settings tiles | Two tiles, tapped in order | One tile for starting and toggling |
 | Privilege state recovery | Not applicable | Async cold-start detection; authorized users enter Home directly |
 | User interface | Shizuku authorization flow | Root or Shizuku authorization flow per selection |
-| App whitelist | Not available | Restrict volume-key screen control to selected foreground apps |
+| App whitelist | Not available | Restrict volume-key screen-off to selected foreground apps (screen-on always allowed) |
 | Tile long-press | Not available | Long-press opens the app home screen |
 
 ## Features
@@ -28,7 +28,7 @@ This project is forked from [Moderpach/Extinguish](https://github.com/Moderpach/
   - **Set screen power off**: switches display power off; touch input is unavailable while off.
   - **Set screen brightness to -1**: keeps touch input available for waking the screen.
 - Floating button with a timer popup.
-- Volume-key control, with an optional **per-app whitelist**: only selected apps in the foreground may toggle the screen with the volume keys. The picker sorts apps A–Z, has a right-side alphabet index, and pins already-selected apps to the top.
+- Volume-key control, with an optional **per-app whitelist**: only selected apps in the foreground may turn the screen OFF with the volume keys; turning it back ON is always allowed in any app. The picker sorts apps A–Z, has a right-side alphabet index, and pins already-selected apps to the top.
 - Touch-event control.
 - Notification controls.
 - One quick-settings tile.
@@ -54,8 +54,9 @@ Both methods share the same AIDL interface and hidden-API logic, so the feature 
 
 ### App whitelist
 
-Open **Home → App whitelist** (under the volume-key control section), turn on the restriction, and select the apps that are allowed to control the screen with the volume keys:
+Open **Home → App whitelist** (under the volume-key control section), turn on the restriction, and select the apps in which the volume keys are allowed to turn the screen OFF:
 
+- The whitelist only gates **screen-off**. **Screen-on is never restricted**, so after turning the screen off (e.g. with the tile) you can wake it with the volume keys in any app.
 - Apps are sorted A–Z (Chinese labels sort by pinyin); a right-side alphabet index lets you tap or drag up/down to jump to a letter, with the current letter highlighted.
 - Selected apps are pinned to the top of the list.
 - An empty selection means no restriction — behaviour is identical to earlier versions.

@@ -58,16 +58,17 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v0.11.1-whitelist-index' }}
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v0.11.2-whitelist-on-only' }}
           name: Extinguish Root/Shizuku 双方案版（Android 17）
           body: |
-            单磁贴一键息屏控制，Root 与 Shizuku 双特权方案随时切换。v0.11.1 修复应用白名单的字母检索。
+            单磁贴一键息屏控制，Root 与 Shizuku 双特权方案随时切换。v0.11.2 优化应用白名单：仅限制熄屏，亮屏不受限。
 
             - Root 方案：基于 libsu 6.0.0 的 RootService（需 Magisk 等授予 Root）
             - Shizuku 方案：通过 Shizuku 授权，无需 Root
             - 单磁贴：首次点击启动并关屏，服务运行期间用音量键控制熄屏/亮屏，再次点击关闭服务
             - 磁贴长按：直接进入应用主页
-            - 应用白名单：仅当选定的 App 在前台时，音量键才控制熄屏/亮屏；应用按 A-Z 排序（中文按拼音，不再堆在末尾），右侧字母栏支持点击与上下滑动检索，已选 App 置顶
+            - 应用白名单：仅当选定的 App 在前台时音量键才会熄屏；亮屏不受限制，任何界面下都能用音量键点亮（例如用磁贴熄屏后临时查看）
+            - 白名单选择界面：应用按 A-Z 排序（中文按拼音，不再堆在末尾），右侧字母栏支持点击与上下滑动检索，已选 App 置顶
             - 截图手势（电源键+音量键同时按下）不会误触熄屏/亮屏
             - 适配 Android 17（API 37），compileSdk / targetSdk 均为 37
 

@@ -386,8 +386,11 @@ class ExtinguishService : LifecycleService() {
             ) {
                 volumeKeyEventWindowHost = VolumeKeyEventWindowHost(this@ExtinguishService) {
                     lifecycleScope.launch(Dispatchers.Main) {
-                        if (!isForegroundAllowed()) return@launch
                         if (isScreenOn) {
+                            // Whitelist only gates turning the screen OFF. Turning
+                            // it back ON is always allowed, so a temporarily
+                            // unlisted app can still be unlocked with volume keys.
+                            if (!isForegroundAllowed()) return@launch
                             updateHostState(false, feature)
                             turnScreenOff()
                         } else {
@@ -432,8 +435,10 @@ class ExtinguishService : LifecycleService() {
                                     this@ExtinguishService, service
                                 ) {
                                     lifecycleScope.launch(Dispatchers.Main) {
-                                        if (!isForegroundAllowed()) return@launch
                                         if (isScreenOn) {
+                                            // Whitelist only gates turning the screen OFF;
+                                            // turning it back ON is always allowed.
+                                            if (!isForegroundAllowed()) return@launch
                                             updateHostState(false, feature)
                                             turnScreenOff()
                                         } else {

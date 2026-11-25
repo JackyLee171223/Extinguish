@@ -58,7 +58,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v0.10.1-root-shizuku' }}
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v0.10.1-tile-stop' }}
           name: Extinguish Root/Shizuku 双方案版（Android 17）
           body: |
             单磁贴一键息屏控制，Root 与 Shizuku 双特权方案随时切换。

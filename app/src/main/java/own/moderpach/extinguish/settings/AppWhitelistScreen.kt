@@ -1,10 +1,11 @@
 package own.moderpach.extinguish.settings
 
 import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
+import android.icu.text.Transliterator
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,13 +15,16 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -40,12 +44,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -59,7 +64,6 @@ import own.moderpach.extinguish.settings.components.SettingListItem
 import own.moderpach.extinguish.settings.data.ISettingsRepository
 import own.moderpach.extinguish.ui.components.ExtinguishTopAppBarWithNavigationBack
 import own.moderpach.extinguish.ui.navigation.extinguishComposable
-import java.text.Collator
 import java.util.Locale
 
 val ExtinguishNavGraph.AppWhitelist: ExtinguishNavRoute get() = "AppWhitelist"
@@ -77,6 +81,8 @@ private data class AppEntry(
     val packageName: String,
     val label: String,
     val isSystem: Boolean,
+    val sortKey: String,
+    val sectionLetter: Char,
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -96,9 +102,11 @@ fun AppWhitelistScreen(
     LaunchedEffect(Unit) {
         val apps = withContext(Dispatchers.IO) {
             val pm = context.packageManager
-            val collator = Collator.getInstance(Locale.getDefault()).apply {
-                strength = Collator.SECONDARY
-            }
+            // "Any-Latin; Latin-ASCII" transliterates Chinese into pinyin without tones,
+            // so Chinese app names land in the correct A-Z section instead of "Z#".
+            val transliterator = runCatching {
+                Transliterator.getInstance("Any-Latin; Latin-ASCII")
+            }.getOrNull()
             pm.getInstalledPackages(0)
                 .mapNotNull { info ->
                     val appInfo = info.applicationInfo ?: return@mapNotNull null
@@ -106,16 +114,20 @@ fun AppWhitelistScreen(
                         .getOrNull()
                         ?.takeIf { it.isNotBlank() }
                         ?: info.packageName
-                    // Hide apps with no launcher intent and our own app.
                     if (info.packageName == context.packageName) return@mapNotNull null
                     if (pm.getLaunchIntentForPackage(info.packageName) == null) return@mapNotNull null
                     AppEntry(
                         packageName = info.packageName,
                         label = label,
                         isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
+                        sortKey = buildSortKey(label, transliterator),
+                        sectionLetter = sectionLetterOf(label, transliterator),
                     )
                 }
-                .sortedWith { a, b -> collator.compare(a.label, b.label) }
+                .sortedWith(
+                    compareBy<AppEntry> { sectionOrder(it.sectionLetter) }
+                        .thenBy { it.sortKey }
+                )
         }
         installedApps = apps
     }
@@ -129,9 +141,7 @@ fun AppWhitelistScreen(
     }
 
     // Build the letter sections from the available (unselected) apps.
-    val sections = remember(availableApps) {
-        buildLetterSections(availableApps)
-    }
+    val sections = remember(availableApps) { buildLetterSections(availableApps) }
     val letterToIndex = remember(sections, selectedApps) {
         // item 0 = enabler card, item 1 = help card.
         var index = 2
@@ -171,7 +181,13 @@ fun AppWhitelistScreen(
         ) {
             LazyColumn(
                 state = listState,
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                // Leave room on the end so rows never sit under the alphabet index.
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    top = 12.dp,
+                    end = 52.dp,
+                    bottom = 12.dp,
+                ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
@@ -218,13 +234,13 @@ fun AppWhitelistScreen(
                 }
             }
 
-            // Right-side alphabet quick index.
+            // Right-side alphabet quick index: tap or drag to jump, kept away from the edge.
             AlphabetIndex(
                 letters = sections.keys.toList(),
                 modifier = Modifier.align(Alignment.CenterEnd),
-                onLetterClick = { letter ->
+                onLetterSelect = { letter ->
                     letterToIndex[letter]?.let { idx ->
-                        coroutineScope.launch { listState.animateScrollToItem(idx) }
+                        coroutineScope.launch { listState.scrollToItem(idx) }
                     }
                 },
             )
@@ -304,38 +320,113 @@ private fun AppRow(
 private fun AlphabetIndex(
     letters: List<Char>,
     modifier: Modifier = Modifier,
-    onLetterClick: (Char) -> Unit,
+    onLetterSelect: (Char) -> Unit,
 ) {
     if (letters.isEmpty()) return
-    Column(
-        modifier = modifier.padding(vertical = 8.dp, horizontal = 2.dp),
-        verticalArrangement = Arrangement.spacedBy(0.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    var activeLetter by remember { mutableStateOf<Char?>(null) }
+    val density = LocalDensity.current
+    val itemHeightPx = with(density) { INDEX_ITEM_HEIGHT.toPx() }
+
+    Box(
+        modifier = modifier.padding(vertical = 12.dp, horizontal = 10.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        letters.forEach { letter ->
-            Text(
-                text = letter.toString(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .clickable { onLetterClick(letter) }
-                    .padding(horizontal = 4.dp, vertical = 1.dp),
-            )
+        Column(
+            modifier = Modifier
+                .clip(RoundedCornerShape(18.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f))
+                .pointerInput(letters, itemHeightPx) {
+                    var lastIndex = -1
+                    fun selectAt(y: Float) {
+                        val index = (y / itemHeightPx).toInt().coerceIn(0, letters.lastIndex)
+                        if (index != lastIndex) {
+                            lastIndex = index
+                            activeLetter = letters[index]
+                            onLetterSelect(letters[index])
+                        }
+                    }
+                    detectDragGestures(
+                        onDragStart = { selectAt(it.y) },
+                        onDrag = { change, _ ->
+                            change.consume()
+                            selectAt(change.position.y)
+                        },
+                        onDragEnd = {
+                            activeLetter = null
+                            lastIndex = -1
+                        },
+                        onDragCancel = {
+                            activeLetter = null
+                            lastIndex = -1
+                        },
+                    )
+                },
+            verticalArrangement = Arrangement.spacedBy(0.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            letters.forEach { letter ->
+                val isActive = letter == activeLetter
+                Box(
+                    modifier = Modifier
+                        .width(26.dp)
+                        .height(INDEX_ITEM_HEIGHT)
+                        .then(
+                            if (isActive) {
+                                Modifier.background(MaterialTheme.colorScheme.primary, CircleShape)
+                            } else {
+                                Modifier
+                            }
+                        )
+                        .clickable { onLetterSelect(letter) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = letter.toString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isActive) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
+                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                    )
+                }
+            }
         }
     }
 }
 
-private fun buildLetterSections(apps: List<AppEntry>): Map<Char, List<AppEntry>> {
-    val collator = Collator.getInstance(Locale.getDefault()).apply {
-        strength = Collator.SECONDARY
+private val INDEX_ITEM_HEIGHT = 20.dp
+
+private fun sectionOrder(letter: Char): Int = if (letter == '#') 26 else letter - 'A'
+
+private fun sectionLetterOf(label: String, transliterator: Transliterator?): Char {
+    val trimmed = label.trim()
+    val first = trimmed.firstOrNull() ?: return '#'
+    val upper = first.uppercaseChar()
+    if (upper in 'A'..'Z') return upper
+    // Chinese / other non-Latin scripts: transliterate to pinyin and take the first letter.
+    if (first.code > 0x7F && transliterator != null) {
+        val romanized = runCatching { transliterator.transliterate(trimmed) }
+            .getOrNull()
+            .orEmpty()
+        val letter = romanized.firstOrNull { it.isLetter() }?.uppercaseChar()
+        if (letter != null && letter in 'A'..'Z') return letter
     }
-    return apps
-        .groupBy { app ->
-            val c = app.label.trim().firstOrNull()?.uppercaseChar() ?: '#'
-            if (c in 'A'..'Z') c else '#'
-        }
-        .toSortedMap(compareBy<Char> { if (it == '#') 1 else 0 }.thenBy { it })
-        .mapValues { (_, list) ->
-            list.sortedWith { a, b -> collator.compare(a.label, b.label) }
-        }
+    return '#'
 }
+
+private fun buildSortKey(label: String, transliterator: Transliterator?): String {
+    val trimmed = label.trim()
+    if (trimmed.all { it.code < 0x80 }) return trimmed.lowercase(Locale.ROOT)
+    val romanized = runCatching { transliterator?.transliterate(trimmed) }
+        .getOrNull()
+        .orEmpty()
+    val normalized = romanized.filter { it.isLetterOrDigit() }.lowercase(Locale.ROOT)
+    return normalized.ifEmpty { trimmed.lowercase(Locale.ROOT) }
+}
+
+private fun buildLetterSections(apps: List<AppEntry>): Map<Char, List<AppEntry>> =
+    apps.groupBy { it.sectionLetter }
+        .toSortedMap(compareBy<Char> { if (it == '#') 1 else 0 }.thenBy { it })
+        .mapValues { (_, list) -> list.sortedBy { it.sortKey } }

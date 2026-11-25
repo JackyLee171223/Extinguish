@@ -1,0 +1,72 @@
+name: Build & Release APK (Root / Shizuku)
+
+# 手动触发，或推送 v* 标签时自动触发
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+# 允许创建 Release 与上传资产
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # Android 17 = API 37.0，仓库目录带 minor 版本号，需显式安装
+      - name: Install Android 17 SDK platform and build-tools
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager --install "platform-tools" "platforms;android-37.0" "build-tools;35.0.0"
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Build debug-signed APK
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebugSignedDebug --stacktrace --no-daemon
+
+      - name: Prepare release asset
+        id: apk
+        run: |
+          APK=$(find app/build/outputs/apk/debugSigned/debug -name '*.apk' | head -n 1)
+          if [ -z "$APK" ]; then echo "APK not found" >&2; exit 1; fi
+          cp "$APK" "Extinguish-Root-Shizuku-Android17.apk"
+          echo "path=Extinguish-Root-Shizuku-Android17.apk" >> "$GITHUB_OUTPUT"
+
+      - name: Verify APK metadata
+        run: |
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          "$AAPT" dump badging Extinguish-Root-Shizuku-Android17.apk | grep -E '^(package|sdkVersion|targetSdkVersion|platformBuildVersionName)'
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v0.10.1-root-shizuku' }}
+          name: Extinguish Root/Shizuku 双方案版（Android 17）
+          body: |
+            单磁贴一键息屏控制，Root 与 Shizuku 双特权方案随时切换。
+
+            - Root 方案：基于 libsu 6.0.0 的 RootService（需 Magisk 等授予 Root）
+            - Shizuku 方案：通过 Shizuku 授权，无需 Root
+            - 单磁贴：首次点击启动并关屏，之后点击在开屏/关屏间切换
+            - 适配 Android 17（API 37），compileSdk / targetSdk 均为 37
+
+            说明：本 APK 使用调试签名（debugSigned）。若已安装原签名版本，请先卸载。
+            在设置页（工作方案）中可随时切换 Root / Shizuku 特权方式。
+          files: Extinguish-Root-Shizuku-Android17.apk
+          generate_release_notes: true
+          fail_on_unmatched_files: true

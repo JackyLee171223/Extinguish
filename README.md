@@ -56,7 +56,7 @@ Both methods share the same AIDL interface and hidden-API logic, so the feature 
 
 Open **Home → App whitelist** (under the volume-key control section), turn on the restriction, and select the apps that are allowed to control the screen with the volume keys:
 
-- Apps are sorted A–Z (Chinese labels sort by pinyin); a right-side alphabet index jumps to a letter.
+- Apps are sorted A–Z (Chinese labels sort by pinyin); a right-side alphabet index lets you tap or drag up/down to jump to a letter, with the current letter highlighted.
 - Selected apps are pinned to the top of the list.
 - An empty selection means no restriction — behaviour is identical to earlier versions.
 - The foreground app is resolved by the privileged process (Root or Shizuku), so it works with both methods and in both volume-key listening modes.
